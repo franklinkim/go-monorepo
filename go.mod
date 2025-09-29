@@ -1,8 +1,4 @@
 module github.com/franklinkim/go-monorepo
 
-go 1.20
+go 1.25
 
-replace (
-	github.com/franklinkim/go-monorepo/one => ./one
-	github.com/franklinkim/go-monorepo/two => ./two
-)
