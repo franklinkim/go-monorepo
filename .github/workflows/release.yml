@@ -1,0 +1,39 @@
+name: Release Tag
+
+on:
+  push:
+    tags:
+      - 'v*.*.*'        # root tags
+      - '*/*/v*.*.*'    # submodule tags like moduleA/v1.2.3
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-go@v6
+        with:
+          go-version-file: 'go.mod'
+
+      - name: Determine folder from tag
+        id: folder
+        run: |
+          TAG="${GITHUB_REF_NAME}"  # e.g. v1.2.3 or moduleA/v1.2.3
+          echo "Detected tag: $TAG"
+
+          FOLDER="."
+          if [[ "$TAG" == */* ]]; then
+            FOLDER="${TAG%%/*}"  # moduleA
+          fi
+
+          echo "folder=$FOLDER" >> $GITHUB_OUTPUT
+
+      - uses: goreleaser/goreleaser-action@v5
+        with:
+          version: '~> 2'
+          args: release --rm-dist
+        working-directory: ${{ steps.folder.outputs.folder }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

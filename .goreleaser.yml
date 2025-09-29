@@ -1,0 +1,12 @@
+version: 2
+
+project_name: go-monorepo
+
+release:
+  prerelease: auto
+
+builds:
+  - skip: true
+
+changelog:
+  use: github-native
