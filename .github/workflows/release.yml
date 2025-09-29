@@ -42,12 +42,21 @@ jobs:
           echo "folder=$FOLDER" >> $GITHUB_OUTPUT
           echo "version=$VERSION" >> $GITHUB_OUTPUT
 
-      - name: Prepare release notes
+      - name: Determine if prerelease (SemVer)
+        id: prerelease
+        run: |
+          VERSION="${{ steps.folder.outputs.version }}"
+          if [[ "$VERSION" =~ -.* ]]; then
+            echo "prerelease=true" >> $GITHUB_OUTPUT
+          else
+            echo "prerelease=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Generate changelog
         id: changelog
         run: |
           FOLDER="${{ steps.folder.outputs.folder }}"
           TAG="${GITHUB_REF_NAME}"
-          # Previous tag, fallback to empty
           PREV_TAG=$(git describe --tags --abbrev=0 "$TAG^" 2>/dev/null || echo "")
           
           if [ "$FOLDER" = "." ]; then
@@ -60,10 +69,12 @@ jobs:
           echo "EOF" >> $GITHUB_ENV
 
       - name: Create GitHub Release
-        run: |
-          gh release create "$GITHUB_REF_NAME" \
-            --title "Release $GITHUB_REF_NAME" \
-            --repo $GITHUB_REPOSITORY \
-            --notes "$notes" \
-            --prerelease=false \
-            --draft=false
+        uses: softprops/action-gh-release@v1
+        with:
+          tag_name: ${{ github.ref_name }}
+          prerelease: ${{ steps.prerelease.outputs.prerelease }}
+          files: |
+            ${{ steps.folder.outputs.folder }}/LICENSE
+            ${{ steps.folder.outputs.folder }}/README.md
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
