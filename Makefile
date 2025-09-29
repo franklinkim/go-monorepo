@@ -50,6 +50,14 @@ endif
 		echo "- $$modname/v$(TAG)"; \
 		git tag "$$modname/v$(TAG)"; \
 	done
+	@echo
+	@read -p "Do you want to push the tags to the remote? [y/N] " yn; \
+	case $$yn in \
+		[Yy]*) \
+			git push origin main --tags ;; \
+		*) \
+			echo "Skipping git push."; \
+	esac
 
 ### Utils
 
