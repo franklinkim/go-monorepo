@@ -4,11 +4,11 @@ on:
   push:
     tags:
       - 'v*.*.*'        # root tags
-      - '*/*/v*.*.*'    # submodule tags like moduleA/v1.2.3
+      - '*\/v*.*.*'    # submodule tags like moduleA/v1.2.3
 
 permissions:
   contents: write
-  
+
 jobs:
   release:
     runs-on: ubuntu-latest
