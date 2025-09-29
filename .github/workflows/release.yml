@@ -1,9 +1,12 @@
 name: Release Tag
 
+
 on:
   push:
-    tags: [ 'v*.*.*' ]
-
+    tags:
+      - 'v*.*.*'       # root module tags
+      - 'v*.*.*-*'     # pre-release tags
+      
 permissions:
   contents: write
 

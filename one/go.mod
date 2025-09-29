@@ -2,8 +2,13 @@ module github.com/franklinkim/go-monorepo/one
 
 go 1.25
 
+replace (
+	github.com/franklinkim/go-monorepo => ../
+	github.com/franklinkim/go-monorepo/two => ../two
+)
+
 require (
-	github.com/franklinkim/go-monorepo/two v0.2.6
+	github.com/franklinkim/go-monorepo/two v0.0.0-00010101000000-000000000000
 	github.com/stretchr/testify v1.11.1
 )
 
