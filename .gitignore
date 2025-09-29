@@ -1,4 +1,11 @@
 .*
+*.gz
+*.out
+*.tar
+*.tgz
+*.zip
+*.log
+*.pem
 !.gitignore
 
 go.work

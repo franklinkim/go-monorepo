@@ -2,9 +2,7 @@ name: Release Tag
 
 on:
   push:
-    tags:
-      - 'v*.*.*'        # root tags
-      - '*\/v*.*.*'    # submodule tags like moduleA/v1.2.3
+    tags: [ 'v*.*.*' ]
 
 permissions:
   contents: write
@@ -15,66 +13,16 @@ jobs:
 
     steps:
       - uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
 
       - uses: actions/setup-go@v6
         with:
           go-version-file: 'go.mod'
 
-      - name: Install GitHub CLI
-        run: |
-          sudo apt update
-          sudo apt install -y gh
-
-      - name: Determine folder and version
-        id: folder
-        run: |
-          TAG="${GITHUB_REF_NAME}"  # e.g. v1.2.3 or moduleA/v1.2.3
-          echo "Detected tag: $TAG"
-
-          FOLDER="."
-          VERSION="${TAG#v}"
-          
-          if [[ "$TAG" == */* ]]; then
-            FOLDER="${TAG%%/*}"  # e.g. moduleA
-            VERSION="${TAG#*/v}"
-          fi
-
-          echo "folder=$FOLDER" >> $GITHUB_OUTPUT
-          echo "version=$VERSION" >> $GITHUB_OUTPUT
-
-      - name: Determine if prerelease (SemVer)
-        id: prerelease
-        run: |
-          VERSION="${{ steps.folder.outputs.version }}"
-          if [[ "$VERSION" =~ -.* ]]; then
-            echo "prerelease=true" >> $GITHUB_OUTPUT
-          else
-            echo "prerelease=false" >> $GITHUB_OUTPUT
-          fi
-
-      - name: Generate changelog
-        id: changelog
-        run: |
-          FOLDER="${{ steps.folder.outputs.folder }}"
-          TAG="${GITHUB_REF_NAME}"
-          PREV_TAG=$(git describe --tags --abbrev=0 "$TAG^" 2>/dev/null || echo "")
-          
-          if [ "$FOLDER" = "." ]; then
-            NOTES=$(git log --pretty=format:"* %s (%an)" "$PREV_TAG"..HEAD)
-          else
-            NOTES=$(git log --pretty=format:"* %s (%an)" "$PREV_TAG"..HEAD -- "$FOLDER")
-          fi
-          echo "notes<<EOF" >> $GITHUB_ENV
-          echo "$NOTES" >> $GITHUB_ENV
-          echo "EOF" >> $GITHUB_ENV
-
-      - name: Create GitHub Release
-        uses: softprops/action-gh-release@v1
+      - uses: goreleaser/goreleaser-action@v5
         with:
-          tag_name: ${{ github.ref_name }}
-          prerelease: ${{ steps.prerelease.outputs.prerelease }}
-          files: |
-            ${{ steps.folder.outputs.folder }}/LICENSE
-            ${{ steps.folder.outputs.folder }}/README.md
+          version: '~> 2'
+          args: release --clean
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

@@ -1,13 +1,6 @@
-package go_monorepo
-
-import (
-	"fmt"
-
-	"github.com/franklinkim/go-monorepo/one"
-	"github.com/franklinkim/go-monorepo/two"
-)
+package main
 
 func main() {
-	fmt.Println(one.String())
-	fmt.Println(two.String())
+	// fmt.Println(one.String())
+	// fmt.Println(two.String())
 }

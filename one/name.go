@@ -1,5 +1,9 @@
 package one
 
+import (
+	"github.com/franklinkim/go-monorepo/two"
+)
+
 func String() string {
-	return "one"
+	return "one" + two.String()
 }

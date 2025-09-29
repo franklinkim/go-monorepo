@@ -10,5 +10,5 @@ import (
 func TestName(t *testing.T) {
 	t.Parallel()
 
-	assert.NotEmpty(t, one.String())
+	assert.Equal(t, "onetwo", one.String())
 }

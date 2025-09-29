@@ -12,8 +12,29 @@ endef
 # --- Targets -----------------------------------------------------------------
 
 # This allows us to accept extra arguments
-%:
+%: go.work
 	@:
+
+# Ensure go.work file
+go.work:
+	@go work init
+	@go work use -r .
+	@go mod tidy
+
+.PHONY: tidy
+## Run go mod tidy
+tidy:
+	@go mod tidy
+
+.PHONY: lint
+## Run go lint
+lint:
+	@golangci-lint run
+
+.PHONY: test
+## Run go test
+test:
+	@GO_TEST_TAGS=-skip go test -tags=safe -coverprofile=coverage.out -race work
 
 .PHONY: release
 ## Create release TAG=1.0.0
