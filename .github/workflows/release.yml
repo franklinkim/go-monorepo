@@ -20,23 +20,50 @@ jobs:
         with:
           go-version-file: 'go.mod'
 
-      - name: Determine folder from tag
+      - name: Install GitHub CLI
+        run: |
+          sudo apt update
+          sudo apt install -y gh
+
+      - name: Determine folder and version
         id: folder
         run: |
           TAG="${GITHUB_REF_NAME}"  # e.g. v1.2.3 or moduleA/v1.2.3
           echo "Detected tag: $TAG"
 
           FOLDER="."
+          VERSION="${TAG#v}"
+          
           if [[ "$TAG" == */* ]]; then
-            FOLDER="${TAG%%/*}"  # moduleA
+            FOLDER="${TAG%%/*}"  # e.g. moduleA
+            VERSION="${TAG#*/v}"
           fi
 
           echo "folder=$FOLDER" >> $GITHUB_OUTPUT
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
 
-      - uses: goreleaser/goreleaser-action@v5
-        with:
-          version: '~> 2'
-          args: release --clean
-          workdir: ${{ steps.folder.outputs.folder }}
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Prepare release notes
+        id: changelog
+        run: |
+          FOLDER="${{ steps.folder.outputs.folder }}"
+          TAG="${GITHUB_REF_NAME}"
+          # Previous tag, fallback to empty
+          PREV_TAG=$(git describe --tags --abbrev=0 "$TAG^" 2>/dev/null || echo "")
+          
+          if [ "$FOLDER" = "." ]; then
+            NOTES=$(git log --pretty=format:"* %s (%an)" "$PREV_TAG"..HEAD)
+          else
+            NOTES=$(git log --pretty=format:"* %s (%an)" "$PREV_TAG"..HEAD -- "$FOLDER")
+          fi
+          echo "notes<<EOF" >> $GITHUB_ENV
+          echo "$NOTES" >> $GITHUB_ENV
+          echo "EOF" >> $GITHUB_ENV
+
+      - name: Create GitHub Release
+        run: |
+          gh release create "$GITHUB_REF_NAME" \
+            --title "Release $GITHUB_REF_NAME" \
+            --repo $GITHUB_REPOSITORY \
+            --notes "$notes" \
+            --prerelease=false \
+            --draft=false
